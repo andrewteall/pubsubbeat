@@ -103,6 +103,7 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 			if bt.config.Json.Fields_under_root {
 				err := json.Unmarshal(m.Data, &eventMap)
 				if err == nil && bt.config.Json.Fields_use_timestamp {
+					var time_err error
 					timestamp := eventMap["@timestamp"]
 					delete(eventMap, "@timestamp")
 					datetime, time_err = time.Parse(bt.config.Json.Fields_timestamp_format, timestamp.(string))
