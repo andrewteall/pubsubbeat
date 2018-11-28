@@ -100,12 +100,12 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 		if bt.config.Json.Enabled {
 			var jsonData interface{}
 
-			if bt.config.Json_fields_under_root {
+			if bt.config.Json.Fields_under_root {
 				err := json.Unmarshal(m.Data, &eventMap)
-				if err == nil && bt.config.Json_fields_use_timestamp {
+				if err == nil && bt.config.Json.Fields_use_timestamp {
 					timestamp := eventMap["@timestamp"]
 					delete(eventMap, "@timestamp")
-					time, time_err := time.Parse(bt.config.Json_fields_timestamp_format, timestamp.(string))
+					time, time_err := time.Parse(bt.config.Json.Fields_timestamp_format, timestamp.(string))
 					if time_err != nil {
 						bt.logger.Errorf("Failed to format timestamp string as time using time.Now(): %s", err)
 						time = time.Now()
