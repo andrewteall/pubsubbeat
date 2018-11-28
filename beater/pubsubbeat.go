@@ -94,23 +94,30 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 
 	err = bt.subscription.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		// This callback is invoked concurrently by multiple goroutines
-		eventMap := common.MapStr{
-			"type":         b.Info.Name,
-			"message_id":   m.ID,
-			"publish_time": m.PublishTime,
-			"message":      string(m.Data),
-		}
 
-		if len(m.Attributes) > 0 {
-			eventMap["attributes"] = m.Attributes
-		}
+		var eventMap common.MapStr
+		var timestamp interface{}
+
+		//eventMap := common.MapStr{
+		//	"type":         b.Info.Name,
+		//	"message_id":   m.ID,
+		//	"publish_time": m.PublishTime,
+		//	"message":      string(m.Data),
+		//}
 
 		if bt.config.Json.Enabled {
 			var jsonData interface{}
-			err := json.Unmarshal(m.Data, &jsonData)
-			if err == nil {
-				eventMap["json"] = jsonData
+
+			if bt.config.Json_fields_under_root {
+				err := json.Unmarshal(m.Data, &eventMap)
 			} else {
+				err := json.Unmarshal(m.Data, &jsonData)
+				if err == nil {
+					eventMap["json"] = jsonData
+				}
+			}
+
+			if err != nil {
 				bt.logger.Warnf("failed to decode json message: %s", err)
 				if bt.config.Json.AddErrorKey {
 					eventMap["error"] = common.MapStr{
@@ -119,6 +126,15 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 					}
 				}
 			}
+		}
+
+		eventMap["type"] = b.Info.Name
+		eventMap["message_id"] = m.ID
+		eventMap["publish_time"] = m.PublishTime
+		eventMap["message"] = string(m.Data)
+
+		if len(m.Attributes) > 0 {
+			eventMap["attributes"] = m.Attributes
 		}
 
 		bt.client.Publish(beat.Event{

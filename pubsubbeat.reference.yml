@@ -76,6 +76,11 @@ pubsubbeat:
 # sub-dictionary. Default is false.
 #fields_under_root: false
 
+# If this option is set to true, the json fields are stored as top-level
+# fields in the output document instead of being grouped under a json
+# sub-dictionary. Default is false.
+#json_fields_under_root: false
+
 # Internal queue configuration for buffering events to be published.
 #queue:
   # Queue type by name (default 'mem')
