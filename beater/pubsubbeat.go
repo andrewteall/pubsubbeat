@@ -94,22 +94,23 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 
 	err = bt.subscription.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		// This callback is invoked concurrently by multiple goroutines
-
 		var eventMap common.MapStr
-		var timestamp interface{}
-
-		//eventMap := common.MapStr{
-		//	"type":         b.Info.Name,
-		//	"message_id":   m.ID,
-		//	"publish_time": m.PublishTime,
-		//	"message":      string(m.Data),
-		//}
+		time := time.Now()
 
 		if bt.config.Json.Enabled {
 			var jsonData interface{}
 
 			if bt.config.Json_fields_under_root {
 				err := json.Unmarshal(m.Data, &eventMap)
+				if err == nil && bt.config.Json_fields_use_timestamp {
+					timestamp := eventMap["@timestamp"]
+					delete(eventMap, "@timestamp")
+					time, time_err := time.Parse(bt.config.Json_fields_timestamp_format, timestamp.(string))
+					if time_err != nil {
+						bt.logger.Errorf("Failed to format timestamp string as time using time.Now(): %s", err)
+						time = time.Now()
+					}
+				}
 			} else {
 				err := json.Unmarshal(m.Data, &jsonData)
 				if err == nil {
@@ -138,7 +139,7 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 		}
 
 		bt.client.Publish(beat.Event{
-			Timestamp: time.Now(),
+			Timestamp: time,
 			Fields:    eventMap,
 		})
 
