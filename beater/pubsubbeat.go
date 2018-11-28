@@ -95,7 +95,7 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 	err = bt.subscription.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		// This callback is invoked concurrently by multiple goroutines
 		var eventMap common.MapStr
-		datetime := time.Now()
+		var datetime Time.time
 
 		if bt.config.Json.Enabled {
 			var jsonData interface{}
@@ -139,6 +139,9 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 		}
 
 		bt.client.Publish(beat.Event{
+			if datetime == nil {
+				datetime = time.Now()
+			}
 			Timestamp: datetime,
 			Fields:    eventMap,
 		})
