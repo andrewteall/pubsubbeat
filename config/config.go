@@ -35,11 +35,11 @@ type Config struct {
 		Create              bool          `config:"create"`
 	}
 	Json struct {
-		Enabled                 bool   `config:"enabled"`
-		AddErrorKey             bool   `config:"add_error_key"`
-		Fields_under_root       bool   `config:"fields_under_root"`
-		Fields_use_timestamp    bool   `config:"fields_use_timestamp"`
-		Fields_timestamp_format string `config:"fields_timestamp_format"`
+		Enabled               bool   `config:"enabled"`
+		AddErrorKey           bool   `config:"add_error_key"`
+		FieldsUnderRoot       bool   `config:"fields_under_root"`
+		FieldsUseTimestamp    bool   `config:"fields_use_timestamp"`
+		FieldsTimestampFormat string `config:"fields_timestamp_format"`
 	}
 }
 
