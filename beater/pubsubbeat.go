@@ -105,9 +105,9 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 		if len(m.Attributes) > 0 {
 			eventMap["attributes"] = m.Attributes
 		}
-		//TODO: Fix timestamp stuffs so that you can select the field to be teh timestamp
-		var unmarshalErr error
+
 		if bt.config.Json.Enabled {
+			var unmarshalErr error
 			if bt.config.Json.FieldsUnderRoot {
 				unmarshalErr = json.Unmarshal(m.Data, &eventMap)
 				if unmarshalErr == nil && bt.config.Json.FieldsUseTimestamp {
