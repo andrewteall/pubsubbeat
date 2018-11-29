@@ -106,32 +106,33 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 			eventMap["attributes"] = m.Attributes
 		}
 
+		var unmarshalErr error
 		if bt.config.Json.Enabled {
 			if bt.config.Json.FieldsUnderRoot {
-				err := json.Unmarshal(m.Data, &eventMap)
-				if err == nil && bt.config.Json.FieldsUseTimestamp {
-					var time_err error
+				unmarshalErr = json.Unmarshal(m.Data, &eventMap)
+				if unmarshalErr == nil && bt.config.Json.FieldsUseTimestamp {
+					var timeErr error
 					timestamp := eventMap["@timestamp"]
 					delete(eventMap, "@timestamp")
-					datetime, time_err = time.Parse(bt.config.Json.FieldsTimestampFormat, timestamp.(string))
-					if time_err != nil {
-						bt.logger.Errorf("Failed to format timestamp string as time. Using time.Now(): %s", time_err)
+					datetime, timeErr = time.Parse(bt.config.Json.FieldsTimestampFormat, timestamp.(string))
+					if timeErr != nil {
+						bt.logger.Errorf("Failed to format timestamp string as time. Using time.Now(): %s", timeErr)
 					}
 				}
 			} else {
 				var jsonData interface{}
-				err := json.Unmarshal(m.Data, &jsonData)
-				if err == nil {
+				unmarshalErr = json.Unmarshal(m.Data, &jsonData)
+				if unmarshalErr == nil {
 					eventMap["json"] = jsonData
 				}
 			}
 
-			if err != nil {
-				bt.logger.Warnf("failed to decode json message: %s", err)
+			if unmarshalErr != nil {
+				bt.logger.Warnf("failed to decode json message: %s", unmarshalErr)
 				if bt.config.Json.AddErrorKey {
 					eventMap["error"] = common.MapStr{
 						"key":     "json",
-						"message": fmt.Sprintf("failed to decode json message: %s", err),
+						"message": fmt.Sprintf("failed to decode json message: %s", unmarshalErr),
 					}
 				}
 			}
