@@ -94,12 +94,19 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 
 	err = bt.subscription.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		// This callback is invoked concurrently by multiple goroutines
-		var eventMap common.MapStr
 		var datetime time.Time
+		eventMap := common.MapStr{
+			"type":         b.Info.Name,
+			"message_id":   m.ID,
+			"publish_time": m.PublishTime,
+			"message":      string(m.Data),
+		}
+
+		if len(m.Attributes) > 0 {
+			eventMap["attributes"] = m.Attributes
+		}
 
 		if bt.config.Json.Enabled {
-			var jsonData interface{}
-
 			if bt.config.Json.Fields_under_root {
 				err := json.Unmarshal(m.Data, &eventMap)
 				if err == nil && bt.config.Json.Fields_use_timestamp {
@@ -108,11 +115,12 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 					delete(eventMap, "@timestamp")
 					datetime, time_err = time.Parse(bt.config.Json.Fields_timestamp_format, timestamp.(string))
 					if time_err != nil {
-						bt.logger.Errorf("Failed to format timestamp string as time using time.Now(): %s", time_err)
+						bt.logger.Errorf("Failed to format timestamp string as time. Using time.Now(): %s", time_err)
 						datetime = time.Now()
 					}
 				}
 			} else {
+				var jsonData interface{}
 				err := json.Unmarshal(m.Data, &jsonData)
 				if err == nil {
 					eventMap["json"] = jsonData
@@ -130,16 +138,7 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 			}
 		}
 
-		eventMap["type"] = b.Info.Name
-		eventMap["message_id"] = m.ID
-		eventMap["publish_time"] = m.PublishTime
-		eventMap["message"] = string(m.Data)
-
-		if len(m.Attributes) > 0 {
-			eventMap["attributes"] = m.Attributes
-		}
-
-		if datetime.String() == "" {
+		if datetime.IsZero() {
 			datetime = time.Now()
 		}
 		bt.client.Publish(beat.Event{
