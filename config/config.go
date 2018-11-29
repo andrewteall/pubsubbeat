@@ -39,6 +39,7 @@ type Config struct {
 		AddErrorKey           bool   `config:"add_error_key"`
 		FieldsUnderRoot       bool   `config:"fields_under_root"`
 		FieldsUseTimestamp    bool   `config:"fields_use_timestamp"`
+		FieldsTimestampName   string `config:"fields_timestamp_name"`
 		FieldsTimestampFormat string `config:"fields_timestamp_format"`
 	}
 }
@@ -46,6 +47,7 @@ type Config struct {
 func GetDefaultConfig() Config {
 	config := Config{}
 	config.Subscription.Create = true
+	config.Json.FieldsTimestampName = "@timestamp"
 	return config
 }
 

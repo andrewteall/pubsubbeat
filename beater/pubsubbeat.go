@@ -105,15 +105,15 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 		if len(m.Attributes) > 0 {
 			eventMap["attributes"] = m.Attributes
 		}
-
+		//TODO: Fix timestamp stuffs so that you can select the field to be teh timestamp
 		var unmarshalErr error
 		if bt.config.Json.Enabled {
 			if bt.config.Json.FieldsUnderRoot {
 				unmarshalErr = json.Unmarshal(m.Data, &eventMap)
 				if unmarshalErr == nil && bt.config.Json.FieldsUseTimestamp {
 					var timeErr error
-					timestamp := eventMap["@timestamp"]
-					delete(eventMap, "@timestamp")
+					timestamp := eventMap[bt.config.Json.FieldsTimestampName]
+					delete(eventMap, bt.config.Json.FieldsTimestampName)
 					datetime, timeErr = time.Parse(bt.config.Json.FieldsTimestampFormat, timestamp.(string))
 					if timeErr != nil {
 						bt.logger.Errorf("Failed to format timestamp string as time. Using time.Now(): %s", timeErr)
