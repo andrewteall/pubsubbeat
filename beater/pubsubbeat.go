@@ -116,7 +116,6 @@ func (bt *Pubsubbeat) Run(b *beat.Beat) error {
 					datetime, time_err = time.Parse(bt.config.Json.FieldsTimestampFormat, timestamp.(string))
 					if time_err != nil {
 						bt.logger.Errorf("Failed to format timestamp string as time. Using time.Now(): %s", time_err)
-						datetime = time.Now()
 					}
 				}
 			} else {
